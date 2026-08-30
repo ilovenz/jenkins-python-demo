@@ -12,6 +12,7 @@ pipeline {
     // 改成你的 Docker Hub 用户名/仓库名，例如 alex/jenkins-python-demo
     IMAGE_NAME = 'alexleesz319/jenkins-python-demo'
     IMAGE_TAG  = "${env.BUILD_NUMBER}"
+    DOCKER_BUILDKIT = '0'
   }
 
   stages {
@@ -19,14 +20,17 @@ pipeline {
       steps {
         checkout scm
         sh 'ls -la'
-      }
+      }docker build --target test -t ${IMAGE_NAME}:test .
+          docker run --rm ${IMAGE_NAME}:test
     }
 
     stage('Test') {
       steps {
         sh '''
-          docker build --target test -t ${IMAGE_NAME}:test .
-          docker run --rm ${IMAGE_NAME}:test          
+          docker run --rm \
+            -v "$PWD":/app -w /app \
+            python:3.12-slim \
+            bash -lc "pip install -r requirements.txt -r requirements-dev.txt && pytest -q"
         '''
       }
     }
