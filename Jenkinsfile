@@ -25,10 +25,8 @@ pipeline {
     stage('Test') {
       steps {
         sh '''
-          docker run --rm \
-            -v "$PWD":/app -w /app \
-            python:3.12-slim \
-            bash -lc "pip install -r requirements.txt -r requirements-dev.txt && pytest -q"
+          docker build --target test -t ${IMAGE_NAME}:test .
+          docker run --rm ${IMAGE_NAME}:test          
         '''
       }
     }
