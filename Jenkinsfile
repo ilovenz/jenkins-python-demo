@@ -9,7 +9,6 @@ pipeline {
   }
 
   environment {
-    // 改成你的 Docker Hub 用户名/仓库名，例如 alex/jenkins-python-demo
     IMAGE_NAME = 'alexleesz319/jenkins-python-demo'
     IMAGE_TAG  = "${env.BUILD_NUMBER}"
     DOCKER_BUILDKIT = '0'
@@ -20,17 +19,14 @@ pipeline {
       steps {
         checkout scm
         sh 'ls -la'
-      }docker build --target test -t ${IMAGE_NAME}:test .
-          docker run --rm ${IMAGE_NAME}:test
+      }
     }
 
     stage('Test') {
       steps {
         sh '''
-          docker run --rm \
-            -v "$PWD":/app -w /app \
-            python:3.12-slim \
-            bash -lc "pip install -r requirements.txt -r requirements-dev.txt && pytest -q"
+          docker build --target test -t "$IMAGE_NAME:test" .
+          docker run --rm "$IMAGE_NAME:test"
         '''
       }
     }
@@ -38,7 +34,7 @@ pipeline {
     stage('Build image') {
       steps {
         sh '''
-          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:staging .
+          docker build -t "$IMAGE_NAME:$IMAGE_TAG" -t "$IMAGE_NAME:staging" .
         '''
       }
     }
@@ -58,8 +54,8 @@ pipeline {
         )]) {
           sh '''
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            docker push ${IMAGE_NAME}:${IMAGE_TAG}
-            docker push ${IMAGE_NAME}:staging
+            docker push "$IMAGE_NAME:$IMAGE_TAG"
+            docker push "$IMAGE_NAME:staging"
           '''
         }
       }
@@ -74,7 +70,7 @@ pipeline {
       }
       steps {
         sh '''
-          IMAGE=${IMAGE_NAME}:staging docker compose -f docker-compose.staging.yml up -d
+          IMAGE="$IMAGE_NAME:staging" docker compose -f docker-compose.staging.yml up -d
           sleep 3
           curl -fsS http://host.docker.internal:5001/health || curl -fsS http://172.17.0.1:5001/health
         '''
@@ -101,7 +97,7 @@ pipeline {
         }
       }
       steps {
-        echo "学习阶段只模拟生产发布: ${IMAGE_NAME}:${IMAGE_TAG}"
+        echo "学习阶段只模拟生产发布"
       }
     }
   }
@@ -111,7 +107,7 @@ pipeline {
       sh 'docker logout || true'
     }
     success {
-      echo "构建成功: ${IMAGE_NAME}:${IMAGE_TAG}"
+      echo '构建成功'
     }
     failure {
       echo '构建失败，打开 Console Output 从第一个红色 stage 往上看。'
