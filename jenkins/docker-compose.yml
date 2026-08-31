@@ -11,7 +11,9 @@ services:
     environment:
       JAVA_OPTS: "-Djenkins.install.runSetupWizard=true"
       # 让容器里访问 Windows / WSL 上映射出来的宿主机服务更稳
-      DOCKER_BUILDKIT: "1"
+      # 但 Jenkins 镜像只装了 docker-ce-cli，没有 docker-buildx-plugin。新版 Docker 开了 BuildKit 就必须有 buildx，
+      # 否则会报错，先关掉 DOCKER_BUILDKIT: "1"
+      DOCKER_BUILDKIT: "0"
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
