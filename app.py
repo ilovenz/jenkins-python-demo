@@ -6,7 +6,7 @@ app = Flask(__name__)
 @app.get("/")
 def index():
     return jsonify(
-        message="hello from jenkins python demo",
+        message="hello from jenkins python demo - ",
         status="ok",
     )
 
