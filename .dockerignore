@@ -8,5 +8,4 @@ __pycache__
 .vscode
 jenkins
 README.md
-tests
 *.md
