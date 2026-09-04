@@ -14,4 +14,4 @@ def test_health():
     response = client.get("/health")
     data = response.get_json()
     assert response.status_code == 200
-    assert data["status"] == "healthy"
+    assert data["status"] == "healthy?"
