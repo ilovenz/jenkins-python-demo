@@ -31,9 +31,11 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
-        sh 'ls -la'
-        echo "BRANCH_NAME=${BRANCH_NAME:-}"
-        echo "GIT_BRANCH=${GIT_BRANCH:-}"
+        sh '''
+          ls -la
+          echo "BRANCH_NAME=${BRANCH_NAME:-}"
+          echo "GIT_BRANCH=${GIT_BRANCH:-}"
+           '''
       }
     }
 
