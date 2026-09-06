@@ -81,9 +81,10 @@ pipeline {
       }
       steps {
         sh '''
-          IMAGE="$IMAGE_NAME:staging" docker compose -f docker-compose.staging.yml up -d
-          sleep 3
-          curl -fsS http://host.docker.internal:5001/health || curl -fsS http://172.17.0.1:5001/health
+           docker rm -f jenkins-python-demo-staging || true
+           IMAGE="$IMAGE_NAME:staging" docker compose -f docker-compose.staging.yml up -d --force-recreate
+           sleep 3
+           curl -fsS http://host.docker.internal:5001/health || curl -fsS http://172.17.0.1:5001/health
         '''
       }
     }
