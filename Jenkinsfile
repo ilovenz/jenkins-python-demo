@@ -1,3 +1,16 @@
+// 普通 Pipeline Job（Pipeline script from SCM）通常没有 BRANCH_NAME，
+// when { branch 'main' } 会把 Push/Deploy 全部跳过。
+// Multibranch 才会设置 BRANCH_NAME。两种 Job 都用这个判断。
+def isReleaseBranch() {
+  def raw = env.BRANCH_NAME ?: env.GIT_BRANCH ?: ''
+  echo "branch check BRANCH_NAME=${env.BRANCH_NAME ?: ''} GIT_BRANCH=${env.GIT_BRANCH ?: ''}"
+  if (!raw.trim()) {
+    return true
+  }
+  def b = raw.replaceFirst('^refs/heads/', '').replaceFirst('^origin/', '')
+  return b == 'main' || b == 'master'
+}
+
 pipeline {
   agent any
 
@@ -19,6 +32,8 @@ pipeline {
       steps {
         checkout scm
         sh 'ls -la'
+        echo "BRANCH_NAME=${BRANCH_NAME:-}"
+        echo "GIT_BRANCH=${GIT_BRANCH:-}"
       }
     }
 
@@ -41,10 +56,7 @@ pipeline {
 
     stage('Push image') {
       when {
-        anyOf {
-          branch 'main'
-          branch 'master'
-        }
+        expression { return isReleaseBranch() }
       }
       steps {
         withCredentials([usernamePassword(
@@ -63,10 +75,7 @@ pipeline {
 
     stage('Deploy staging') {
       when {
-        anyOf {
-          branch 'main'
-          branch 'master'
-        }
+        expression { return isReleaseBranch() }
       }
       steps {
         sh '''
@@ -79,10 +88,7 @@ pipeline {
 
     stage('Approve production') {
       when {
-        anyOf {
-          branch 'main'
-          branch 'master'
-        }
+        expression { return isReleaseBranch() }
       }
       steps {
         input message: '确认部署到生产？学习阶段点 Abort 即可。', ok: 'Deploy'
@@ -91,10 +97,7 @@ pipeline {
 
     stage('Deploy production') {
       when {
-        anyOf {
-          branch 'main'
-          branch 'master'
-        }
+        expression { return isReleaseBranch() }
       }
       steps {
         echo "学习阶段只模拟生产发布"
